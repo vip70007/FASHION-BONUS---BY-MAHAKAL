@@ -1,0 +1,274 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Fashion Bonus - MAHAKAL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&display=swap');
+:root{
+  --maroon1:#3a0d12;
+  --maroon2:#1a0000;
+  --accent1:#d76d77;
+  --accent2:#ffaf7b;
+}
+body{
+  margin:0;
+  font-family:'Playfair Display',serif;
+  background:linear-gradient(135deg,var(--maroon1),#000);
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  overflow:hidden;
+}
+.container{
+  text-align:center;
+  width:100%;
+  max-width:420px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+h1{
+  font-size:22px;
+  color:var(--accent2);
+  margin-bottom:8px;
+  text-shadow:0 0 12px var(--accent2);
+}
+.fashion-img{
+  width:200px;
+  border-radius:16px;
+  box-shadow:0 0 25px rgba(255,192,203,.25);
+  animation:glow 2s infinite alternate;
+  cursor:pointer;
+  transition:all 0.8s ease;
+  margin-bottom:18px;
+}
+.fashion-img.shrink{
+  width:140px;
+  transform:translateY(-5px);
+  margin-bottom:16px;
+}
+@keyframes glow{
+  from{box-shadow:0 0 10px #d76d77;}
+  to{box-shadow:0 0 25px #ffaf7b;}
+}
+.input-section{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.8s ease;
+}
+.input-section.visible{
+  opacity:1;
+  pointer-events:auto;
+}
+.input-section input{
+  padding:10px 12px;
+  font-size:16px;
+  width:220px;
+  border-radius:8px;
+  border:2px solid var(--accent2);
+  background:var(--maroon2);
+  color:#fff;
+  text-align:center;
+  outline:none;
+}
+.input-section button{
+  padding:10px 22px;
+  border:none;
+  border-radius:8px;
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  color:#000;
+  font-weight:600;
+  cursor:pointer;
+  animation:pulseGlow 2s infinite;
+}
+@keyframes pulseGlow{
+  0%,100%{box-shadow:0 0 8px rgba(255,175,123,.3);}
+  50%{box-shadow:0 0 20px rgba(255,175,123,.8);}
+}
+.input-section button:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+  animation:none;
+}
+.timer{
+  font-size:15px;
+  color:#f5d0c5;
+  margin-top:6px;
+}
+#bonus-text{
+  font-size:18px;
+  color:var(--accent2);
+  margin-top:10px;
+  opacity:0;
+  animation:fadeInOut 3s ease-in-out;
+}
+@keyframes fadeInOut{
+  0%{opacity:0;transform:scale(0.9);}
+  20%{opacity:1;transform:scale(1);}
+  80%{opacity:1;}
+  100%{opacity:0;transform:scale(0.95);}
+}
+.restart-btn{
+  margin-top:14px;
+  padding:10px 22px;
+  border-radius:8px;
+  border:none;
+  background:linear-gradient(90deg,var(--accent2),var(--accent1));
+  color:#000;
+  font-weight:700;
+  cursor:pointer;
+}
+.admin-fab{
+  position:fixed;
+  right:18px;
+  bottom:18px;
+  z-index:999;
+  background:linear-gradient(90deg,var(--accent1),var(--accent2));
+  border:none;
+  padding:12px 16px;
+  border-radius:50px;
+  cursor:pointer;
+  color:#000;
+  font-weight:bold;
+  box-shadow:0 6px 18px rgba(0,0,0,.45);
+}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+<audio id="bgm" src="bgm.mp3" loop></audio>
+<audio id="sparkle" src="sparkle.mp3"></audio>
+
+<div class="container">
+  <h1>FASHION BONUS - MAHAKAL</h1>
+  <h2 id="bonus-text"></h2>
+  <img id="fashionImg" src="fashion.png" alt="Fashion Image" class="fashion-img"
+       onerror="this.src='https://via.placeholder.com/260x200/3a0d12/ffffff?text=Fashion+Image+Missing'">
+
+  <div id="input-section" class="input-section">
+    <input type="text" id="mobile" maxlength="10" placeholder="Enter 10-digit mobile number" inputmode="numeric">
+    <button id="submitBtn" disabled>Reveal Bonus</button>
+    <div id="timer" class="timer"></div>
+  </div>
+</div>
+
+<button id="adminFab" class="admin-fab">Admin</button>
+
+<script>
+const ADMIN_CODE="vipin@2025";
+const LOCK_DURATION=7*24*60*60*1000;
+const fashionImg=document.getElementById("fashionImg");
+const bgm=document.getElementById("bgm");
+const sparkle=document.getElementById("sparkle");
+const inputSection=document.getElementById("input-section");
+const mobile=document.getElementById("mobile");
+const submitBtn=document.getElementById("submitBtn");
+const bonusText=document.getElementById("bonus-text");
+const timer=document.getElementById("timer");
+const adminFab=document.getElementById("adminFab");
+let countdownInterval=null;
+
+adminFab.addEventListener("click",()=>{
+  const isAdmin=getIsAdmin();
+  if(isAdmin){ if(confirm("Logout admin?")){localStorage.removeItem("isAdmin");alert("Admin OFF");} return; }
+  const code=prompt("Enter Admin Code:");
+  if(code===ADMIN_CODE){localStorage.setItem("isAdmin","1");alert("Admin ON");}
+  else alert("Wrong code!");
+});
+function getIsAdmin(){return localStorage.getItem("isAdmin")==="1";}
+
+// Click fashion image
+fashionImg.addEventListener("click",()=>{
+  try{bgm.volume=0.4;bgm.play();}catch(e){}
+  fashionImg.classList.add("shrink");
+  inputSection.classList.add("visible");
+});
+
+// Enable button only if 10-digit
+mobile.addEventListener("input",()=>{
+  mobile.value=mobile.value.replace(/\D/g,'');
+  submitBtn.disabled=mobile.value.length!==10;
+});
+
+// Reveal Bonus
+submitBtn.addEventListener("click",()=>{
+  const mob=mobile.value.trim();
+  if(mob.length!==10)return;
+
+  const isAdmin=getIsAdmin();
+  const storedBonus=localStorage.getItem("bonus_"+mob);
+  let points;
+
+  if(storedBonus){ points=parseInt(storedBonus); }
+  else{
+    points=[100,200,250][Math.floor(Math.random()*3)];
+    localStorage.setItem("bonus_"+mob,points);
+  }
+
+  try{bgm.pause();bgm.currentTime=0;}catch(e){}
+
+  inputSection.style.display="none";
+  showBonus(points,isAdmin);
+});
+
+function showBonus(points,isAdmin){
+  bonusText.textContent=`🎉 CONGRATULATIONS! AAPKO MILTE HAI ${points} BONUS POINTS 🎉`;
+  bonusText.style.opacity=1;
+  bonusText.style.animation="fadeInOut 3s ease-in-out";
+  try{sparkle.play();}catch(e){}
+  playVoice(points);
+  triggerConfetti();
+  if(!isAdmin)startCountdown();
+}
+
+function playVoice(points){
+  const v=new Audio(`voice_${points}.mp3`);
+  v.play().catch(()=>{console.warn("Missing voice_"+points)});
+}
+
+function triggerConfetti(){
+  const end=Date.now()+3000;
+  (function frame(){
+    confetti({particleCount:5,angle:60,spread:55,origin:{x:0}});
+    confetti({particleCount:5,angle:120,spread:55,origin:{x:1}});
+    if(Date.now()<end)requestAnimationFrame(frame);
+  })();
+}
+
+function startCountdown(){
+  clearInterval(countdownInterval);
+  const end=parseInt(localStorage.getItem("lockedUntil")||0);
+  if(!end)return;
+  const update=()=>{
+    const rem=end-Date.now();
+    if(rem<=0){
+      localStorage.removeItem("lockedUntil");
+      timer.textContent="🎯 Next chance available now!";
+      clearInterval(countdownInterval);
+      const btn=document.createElement("button");
+      btn.textContent="Try Again";
+      btn.className="restart-btn";
+      btn.onclick=()=>location.reload();
+      document.querySelector('.container').appendChild(btn);
+      return;
+    }
+    const d=Math.floor(rem/(1000*60*60*24));
+    const h=Math.floor((rem/(1000*60*60))%24);
+    const m=Math.floor((rem/(1000*60))%60);
+    const s=Math.floor((rem/1000)%60);
+    timer.textContent=`Next chance in ${d}d ${h}h ${m}m ${s}s`;
+  };
+  update();
+  countdownInterval=setInterval(update,1000);
+}
+</script>
+</body>
+</html>
